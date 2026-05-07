@@ -318,7 +318,7 @@
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyWLDtbH-o9MySXebMADAPgvinf41BC4hL25T79zwxR3u-DaS8y0t2ijTQfxB_muW9/exec";
-const FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc4SSnzIyTWyD0HuuYbBr8eIv2WuyqC5KWIAe-5ZVgki7SnJw/viewform?usp=dialog";
+const FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc4SSnzIyTWyD0HuuYbBr8eIv2WuyqC5KWIAe-5ZVgki7SnJw/viewform";
 // ──────────────────────────────────────────────────────────────
 
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -362,7 +362,7 @@ function renderShifts(data) {
       pillsHTML += `<span class="open-slot">Open slot</span>`;
     }
 
-    const formURL = FORM_BASE_URL;
+    const formURL = `${FORM_BASE_URL}?usp=pp_url&entry.1584575660=${date}`;
 
     const card = document.createElement("div");
     card.className = `shift-card${isFull ? " full" : ""}`;
