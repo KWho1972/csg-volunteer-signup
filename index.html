@@ -308,7 +308,6 @@
     Subscribe once to see all shifts — including who's signed up — directly in your Google Calendar.
     <br><br>
     <a href="https://calendar.google.com/calendar/embed?src=co.shakespeare.garden%40gmail.com&ctz=America%2FDenver" target="_blank">→ Add CSG Wednesday Volunteers to your calendar</a>
-    <br><small style="color:var(--muted); margin-top:0.4rem; display:block;">Replace CALENDAR_SUBSCRIBE_URL with your Google Calendar share link after setup.</small>
   </div>
 </main>
 
@@ -318,11 +317,7 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-// Paste your deployed Apps Script Web App URL here:
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypAal7wOfOPWgF9eujsiLoS9zVEBm_vdeblhkisHB8F1MDs0omkxPtGjXOszwMBRzf/exec";
-
-// Your Google Form pre-fill URL base — replace with your form URL
-// To get per-date pre-fill links, see setup guide.
 const FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc4SSnzIyTWyD0HuuYbBr8eIv2WuyqC5KWIAe-5ZVgki7SnJw/viewform?usp=dialog";
 // ──────────────────────────────────────────────────────────────
 
@@ -367,9 +362,7 @@ function renderShifts(data) {
       pillsHTML += `<span class="open-slot">Open slot</span>`;
     }
 
-    const formURL = FORM_BASE_URL !== "https://docs.google.com/forms/d/e/1FAIpQLSc4SSnzIyTWyD0HuuYbBr8eIv2WuyqC5KWIAe-5ZVgki7SnJw/viewform?usp=dialog"
-      ? `${FORM_BASE_URL}`
-      : "#";
+    const formURL = FORM_BASE_URL;
 
     const card = document.createElement("div");
     card.className = `shift-card${isFull ? " full" : ""}`;
@@ -394,17 +387,6 @@ function renderShifts(data) {
 }
 
 function loadShifts() {
-  if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbypAal7wOfOPWgF9eujsiLoS9zVEBm_vdeblhkisHB8F1MDs0omkxPtGjXOszwMBRzf/exec") {
-    // Demo mode — show sample data
-    renderShifts([
-      { date: "2025-05-07", volunteers: ["Alice B."], count: 1, max: 2 },
-      { date: "2025-05-14", volunteers: [], count: 0, max: 2 },
-      { date: "2025-05-21", volunteers: ["Carol T.", "David M."], count: 2, max: 2 },
-      { date: "2025-05-28", volunteers: ["Ellen R."], count: 1, max: 2 },
-    ]);
-    return;
-  }
-
   fetch(APPS_SCRIPT_URL)
     .then(r => r.json())
     .then(data => renderShifts(data))
