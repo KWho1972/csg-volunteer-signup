@@ -424,7 +424,7 @@
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_2MTKvUXKPhr8hAFye8KPgTEQ0JnVk-gVsSnRRWSP7Yr5rb3XwuXy6kPXr9_-KIzR/exec";
-const FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc4SSnzIyTWyD0HuuYbBr8eIv2WuyqC5KWIAe-5ZVgki7SnJw/viewform?usp=dialog";
+const FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc4SSnzIyTWyD0HuuYbBr8eIv2WuyqC5KWIAe-5ZVgki7SnJw/viewform";
 // ──────────────────────────────────────────────────────────────
 
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -569,6 +569,7 @@ function cancelShift(dateStr, email, btn) {
 }
 
 
+function escapeHTML(str) {
   return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
