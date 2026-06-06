@@ -235,6 +235,100 @@
     font-size: 1.1rem;
   }
 
+  /* ── Manage shift box ────────────────────────────────────── */
+  .manage-box {
+    border: 1px solid #E2DCCE;
+    border-left: 3px solid var(--pink);
+    background: var(--parchment);
+    padding: 1rem 1.25rem;
+    border-radius: 0 3px 3px 0;
+    font-size: 0.82rem;
+    color: var(--stone);
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+  }
+  .manage-box strong {
+    display: block;
+    font-weight: 500;
+    color: var(--forest);
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+  }
+  .manage-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .manage-form input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid #C8C0B0;
+    border-radius: 2px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.82rem;
+    background: white;
+    color: var(--ink);
+  }
+  .manage-form input:focus {
+    outline: none;
+    border-color: var(--sage);
+  }
+  .manage-form button {
+    padding: 0.45rem 1rem;
+    background: var(--forest);
+    color: var(--parchment);
+    border: none;
+    border-radius: 2px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .manage-form button:hover { background: var(--stone); }
+
+  #manage-results { margin-top: 1rem; }
+  .my-shift-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #E2DCCE;
+    gap: 1rem;
+  }
+  .my-shift-row:last-child { border-bottom: none; }
+  .my-shift-date {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    color: var(--forest);
+  }
+  .cancel-btn {
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--pink);
+    color: var(--pink);
+    background: transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .cancel-btn:hover { background: var(--pink); color: white; }
+  .manage-msg {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.82rem;
+    padding: 0.5rem 0;
+  }
+
   /* ── Calendar subscribe ──────────────────────────────────── */
   .subscribe-box {
     border: 1px solid #E2DCCE;
@@ -299,6 +393,18 @@
 
   <div id="shifts-container">
     <div class="status-msg">Loading shifts&hellip;</div>
+  </div>
+
+  <p class="section-label">Manage my shift</p>
+
+  <div class="manage-box">
+    <strong>Need to cancel or change your shift?</strong>
+    Enter the email address you used to sign up and we'll show your upcoming shifts.
+    <div class="manage-form">
+      <input type="email" id="cancel-email" placeholder="your@email.com" autocomplete="email">
+      <button onclick="lookupShifts()">Find my shifts</button>
+    </div>
+    <div id="manage-results"></div>
   </div>
 
   <p class="section-label">Stay in the loop</p>
@@ -389,14 +495,80 @@ function renderShifts(data) {
 function loadShifts() {
   fetch(APPS_SCRIPT_URL)
     .then(r => r.json())
-    .then(data => renderShifts(data))
+    .then(resp => {
+      // Handle both old format (array) and new format ({action, data})
+      const data = Array.isArray(resp) ? resp : resp.data;
+      renderShifts(data);
+    })
     .catch(() => {
       document.getElementById("shifts-container").innerHTML =
         '<div class="status-msg">Unable to load shifts. Please try again shortly.</div>';
     });
 }
 
-function escapeHTML(str) {
+function lookupShifts() {
+  const email = document.getElementById("cancel-email").value.trim();
+  const results = document.getElementById("manage-results");
+  if (!email) {
+    results.innerHTML = '<div class="manage-msg">Please enter your email address.</div>';
+    return;
+  }
+  results.innerHTML = '<div class="manage-msg">Looking up your shifts…</div>';
+
+  fetch(`${APPS_SCRIPT_URL}?action=lookup&email=${encodeURIComponent(email)}`)
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.shifts || resp.shifts.length === 0) {
+        results.innerHTML = '<div class="manage-msg">No upcoming shifts found for that email address.</div>';
+        return;
+      }
+      const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      let html = '';
+      resp.shifts.forEach(shift => {
+        const [y, m, d] = shift.date.split("-").map(Number);
+        const dt = new Date(y, m-1, d);
+        const label = `${DAYS[dt.getDay()]}, ${MONTHS[m-1]} ${d}, ${y}`;
+        html += `
+          <div class="my-shift-row">
+            <div class="my-shift-date">${label} &nbsp;·&nbsp; 5:00–6:30 PM</div>
+            <button class="cancel-btn" onclick="cancelShift('${shift.date}', '${escapeHTML(email)}', this)">Cancel shift</button>
+          </div>`;
+      });
+      results.innerHTML = html;
+    })
+    .catch(() => {
+      results.innerHTML = '<div class="manage-msg">Something went wrong. Please try again.</div>';
+    });
+}
+
+function cancelShift(dateStr, email, btn) {
+  if (!confirm("Are you sure you want to cancel this shift?")) return;
+  btn.textContent = "Cancelling…";
+  btn.disabled = true;
+
+  fetch(`${APPS_SCRIPT_URL}?action=cancel&email=${encodeURIComponent(email)}&date=${encodeURIComponent(dateStr)}`)
+    .then(r => r.json())
+    .then(resp => {
+      if (resp.success) {
+        const row = btn.closest(".my-shift-row");
+        row.innerHTML = '<div class="manage-msg" style="color:var(--sage)">✓ Shift cancelled. A confirmation email has been sent.</div>';
+        // Reload the shift list to reflect the opening
+        setTimeout(loadShifts, 1500);
+      } else {
+        btn.textContent = "Cancel shift";
+        btn.disabled = false;
+        alert("Could not cancel that shift. Please try again or contact us.");
+      }
+    })
+    .catch(() => {
+      btn.textContent = "Cancel shift";
+      btn.disabled = false;
+      alert("Something went wrong. Please try again.");
+    });
+}
+
+
   return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
